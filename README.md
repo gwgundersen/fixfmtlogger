@@ -6,7 +6,11 @@ TK.
 
 ## Install
 
-TK.
+From PyPI:
+
+```bash
+pip install flogger
+```
 
 ## Todo
 
