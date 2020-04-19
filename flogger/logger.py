@@ -15,7 +15,7 @@ import sys
 
 class Flogger:
 
-    _DEF_LINE_W   = 80
+    _DEF_LINE_W   = 79
     _HLINE        = '-' * _DEF_LINE_W
     _HLINE_BOLD   = '=' * _DEF_LINE_W
 
