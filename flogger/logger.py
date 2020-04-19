@@ -19,8 +19,8 @@ class Flogger:
     _HLINE        = '-' * _DEF_LINE_W
     _HLINE_BOLD   = '=' * _DEF_LINE_W
 
-    def __init__(self, fpath=None, key_width=None, val_width=None,
-                 overwrite=False, precision=6, metadata=None, flush=False):
+    def __init__(self, fpath=None, overwrite=False, precision=6, metadata=None,
+                 flush=False):
         """
         """
         if fpath:
@@ -38,10 +38,6 @@ class Flogger:
         else:
             self.use_file = False
 
-        self.key_width = key_width
-        self.val_width = val_width
-        self.key_fmttr = None
-        self.val_fmttr = None
         self.precision = precision
 
         self.first = True
@@ -98,7 +94,7 @@ class Flogger:
 # Iteration-based logging.
 # -----------------------------------------------------------------------------
 
-class IterFlogger(Flogger):
+class KeyValLogger(Flogger):
 
     def __init__(self, fpath=None, key_width=None, val_width=None,
                  overwrite=False, precision=6, metadata=None, flush=False,
@@ -107,13 +103,15 @@ class IterFlogger(Flogger):
         """
         super().__init__(
             fpath=fpath,
-            key_width=key_width,
-            val_width=val_width,
             overwrite=overwrite,
             precision=precision,
             metadata=metadata,
             flush=flush
         )
+        self.key_width = key_width
+        self.val_width = val_width
+        self.key_fmttr = None
+        self.val_fmttr = None
         self.iter_keys = None
         self.iter_key  = iter_key
         self.freq      = freq
@@ -163,31 +161,33 @@ class IterFlogger(Flogger):
 # Table-based logging.
 # -----------------------------------------------------------------------------
 
-class TableFlogger(Flogger):
+class TableLogger(Flogger):
 
-    def __init__(self, header, sep='\t', fpath=None, key_width=None,
-                 val_width=None, overwrite=False, precision=6, metadata=None,
+    def __init__(self, header, sep='\t', fpath=None, cell_width=None,
+                 vlines=True, overwrite=False, precision=6, metadata=None,
                  flush=False):
         """
         """
         self.header = header
         self.sep    = sep
-        self.tbl    = StatelessRowTable()
+        self.tbl    = StatelessRowTable(header, width=cell_width,
+                                        vlines=vlines)
 
         super().__init__(
             fpath=fpath,
-            key_width=key_width,
-            val_width=val_width,
             overwrite=overwrite,
             precision=precision,
             metadata=metadata,
             flush=flush
         )
 
-        self._log(self.sep.join(header))
+        self.hline(bold=True)
+        self._log(self.tbl.header())
+        self._log(self.tbl.hline())
 
     def log(self, data):
-        self._log(self.tbl.register())
+        line = self.tbl.register(data)
+        self._log(line)
 
 
 # -----------------------------------------------------------------------------

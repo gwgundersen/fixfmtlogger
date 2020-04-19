@@ -2,7 +2,7 @@
 Utilities for parsing loggers.
 ============================================================================"""
 
-from flogger.logger import IterFlogger
+from flogger.logger import KeyValLogger
 
 # -----------------------------------------------------------------------------
 
@@ -20,7 +20,7 @@ class IterParser(Parser):
         """
         """
         self.logger = logger
-        assert(isinstance(logger, IterFlogger))
+        assert(isinstance(logger, KeyValLogger))
         self.iter_key = logger.iter_key
         with open(logger.fpath, 'r') as f:
             raw_lines = f.readlines()
