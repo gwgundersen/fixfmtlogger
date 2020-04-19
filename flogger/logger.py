@@ -3,13 +3,14 @@ Logger with fix-width formatting.
 ============================================================================"""
 
 import fixfmt
+from   flogger.table import StatelessRowTable
 import logging
 import os
 import sys
 
 
 # -----------------------------------------------------------------------------
-# Flogger API.
+# Base Flogger class.
 # -----------------------------------------------------------------------------
 
 class Flogger:
@@ -18,29 +19,33 @@ class Flogger:
     _HLINE        = '-' * _DEF_LINE_W
     _HLINE_BOLD   = '=' * _DEF_LINE_W
 
-    def __init__(self, fpath='out.txt', use_file=True, key_width=None,
-                 val_width=None, overwrite=False, precision=6, metadata=None,
-                 flush=False):
+    def __init__(self, fpath=None, key_width=None, val_width=None,
+                 overwrite=False, precision=6, metadata=None, flush=False):
         """
         """
-        if os.path.exists(fpath) and not overwrite:
-            raise FileExistsError(f'File "{fpath}" already exists.')
+        if fpath:
+            if os.path.exists(fpath) and not overwrite:
+                raise FileExistsError(f'File "{fpath}" already exists.')
 
-        # Create underlying logger.
-        self.fpath  = fpath
-        handler     = logging.FileHandler(f'{self.fpath}', mode='w+')
-        self.logger = logging.getLogger('logger.main')
-        self.logger.setLevel(logging.INFO)
-        self.logger.addHandler(handler)
+            # Create underlying logger.
+            self.fpath = fpath
+            handler = logging.FileHandler(f'{self.fpath}', mode='w+')
+            self.logger = logging.getLogger('logger.main')
+            self.logger.setLevel(logging.INFO)
+            self.logger.addHandler(handler)
 
-        self.use_file  = use_file
+            self.use_file = True
+        else:
+            self.use_file = False
+
         self.key_width = key_width
         self.val_width = val_width
         self.key_fmttr = None
         self.val_fmttr = None
-        self.first     = True
         self.precision = precision
-        self.flush     = flush
+
+        self.first = True
+        self.flush = flush
 
         if metadata:
             self.hline(bold=True)
@@ -57,14 +62,6 @@ class Flogger:
         mark = self._HLINE_BOLD if bold else self._HLINE
         self._log(mark)
 
-    def get_format_map(self):
-        """
-        """
-        map_ = {}
-        for k in self.iter_keys:
-            map_[self.key_fmttr(k)] = k
-        return map_
-
     def format_number(self, value):
         """
         """
@@ -79,6 +76,8 @@ class Flogger:
         """
         if self.use_file:
             self.logger.info(msg)
+            if self.flush:
+                sys.stdout.flush()
         else:
             print(msg)
 
@@ -101,14 +100,13 @@ class Flogger:
 
 class IterFlogger(Flogger):
 
-    def __init__(self, fpath='out.txt', use_file=True, key_width=None,
-                 val_width=None, overwrite=False, precision=6, metadata=None,
-                 flush=False, iter_key='iter', freq=1):
+    def __init__(self, fpath=None, key_width=None, val_width=None,
+                 overwrite=False, precision=6, metadata=None, flush=False,
+                 iter_key='iter', freq=1):
         """
         """
         super().__init__(
             fpath=fpath,
-            use_file=use_file,
             key_width=key_width,
             val_width=val_width,
             overwrite=overwrite,
@@ -152,8 +150,44 @@ class IterFlogger(Flogger):
                 v = self.format_number(v)
             self._log(f'{self.key_fmttr(k)}: {self.val_fmttr(v)}')
 
-        if self.flush:
-            sys.stdout.flush()
+    def get_format_map(self):
+        """
+        """
+        map_ = {}
+        for k in self.iter_keys:
+            map_[self.key_fmttr(k)] = k
+        return map_
+
+
+# -----------------------------------------------------------------------------
+# Table-based logging.
+# -----------------------------------------------------------------------------
+
+class TableFlogger(Flogger):
+
+    def __init__(self, header, sep='\t', fpath=None, key_width=None,
+                 val_width=None, overwrite=False, precision=6, metadata=None,
+                 flush=False):
+        """
+        """
+        self.header = header
+        self.sep    = sep
+        self.tbl    = StatelessRowTable()
+
+        super().__init__(
+            fpath=fpath,
+            key_width=key_width,
+            val_width=val_width,
+            overwrite=overwrite,
+            precision=precision,
+            metadata=metadata,
+            flush=flush
+        )
+
+        self._log(self.sep.join(header))
+
+    def log(self, data):
+        self._log(self.tbl.register())
 
 
 # -----------------------------------------------------------------------------

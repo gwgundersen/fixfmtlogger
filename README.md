@@ -1,4 +1,4 @@
-A Python library for logging with fixed-width formatted data. Designed for logging lots of structure data, e.g. logging in a machine-learning project.
+A Python library for formatted logging, built on [fixfmt](https://github.com/alexhsamuel/fixfmt) for fixed-width formatted data. Designed for consistently logging structured data.
 
 ## API
 
@@ -14,5 +14,6 @@ pip install flogger
 
 ## Todo
 
-- Build out base `Parse`.
+- Create stateless table that takes fixed set of headers and formatters.
 - Support tabular data; `TableLogger`?
+- Build out base `Parse`.
